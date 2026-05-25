@@ -321,6 +321,45 @@
           <div id="extra-content" role="img" aria-label="Head-to-head win probability matrix"></div>
           <table class="sr-only" id="extra-data-table"><caption>Head to head Elo-derived win probability</caption><thead><tr><th scope="col">Matchup</th><th scope="col">Win probability</th></tr></thead><tbody id="extra-data-body"></tbody></table>
         </section>
+        <section class="section extra-panel" aria-labelledby="formvar-heading" id="extra2-section">
+          <div class="section-header">
+            <div>
+              <h2 id="formvar-heading">Form × variance map // consistency frontier</h2>
+              <p class="subtext" id="extra2-subtitle">Each team's Elo trend (x-axis) plotted against rolling rating-deviation (y-axis). Top-right = high-form low-variance — favorites. Bottom-left = improving long shots.</p>
+            </div>
+            <span id="extra2-meta" class="subtext"></span>
+          </div>
+          <div id="extra2-content" role="img" aria-label="Form versus variance scatter plot of all teams"></div>
+          <table class="sr-only" id="extra2-data-table"><caption>Team form (Elo trend) and variance (rating deviation)</caption><thead><tr><th scope="col">Team</th><th scope="col">Form Δ Elo</th><th scope="col">Rating deviation</th></tr></thead><tbody id="extra2-data-body"></tbody></table>
+        </section>
+        <section class="section methodology" aria-labelledby="methodology-heading" id="methodology-section">
+          <div class="section-header">
+            <div>
+              <h2 id="methodology-heading">Methodology &amp; model</h2>
+              <p class="subtext">Technical write-up of the stochastic process, calibration approach, and published references for the Team layer of this dashboard.</p>
+            </div>
+            <span class="subtext">WCAG 2.2 AA · dissertation-grade documentation</span>
+          </div>
+
+          <article class="methodology-article">
+            <h3 id="m-model">Stochastic model</h3>
+            <p>Team strength is tracked via the Glicko-2 rating system, which extends Elo with explicit rating-deviation <code>RD</code> (uncertainty) and rating-volatility <code>σ</code> (consistency). Match outcome probability between two teams with ratings <code>r_A, r_B</code> and combined rating deviation <code>RD_*</code> is:</p>
+      <p class="m-eq"><span role="math" aria-label="Probability A beats B equals 1 over 1 plus 10 to the g of RD star times r sub B minus r sub A all over 400">P(A beats B) = 1 / ( 1 + 10^( g(RD_*) (r_B − r_A) / 400 ) )</span></p>
+      <p>where <code>g(RD) = 1 / sqrt(1 + 3 RD² / π²)</code> is the rating-deviation discount. Rating updates are computed each match via the Glickman two-step ratings-period algorithm.</p>
+
+            <h3 id="m-calib">Calibration</h3>
+            <p>Initial ratings, RDs, and σ values are seeded from HLTV.org, OP.gg, and Liquipedia head-to-head match histories. The form-vs-variance panel uses 90-day rolling Δ-Elo (form) on the x-axis against current rating-deviation (variance) on the y-axis. Tournament-bracket EV simulations are Monte Carlo over a Bo3 / Bo5 win-probability tree.</p>
+
+            <h3 id="m-impl">Numerical implementation</h3>
+            <p>The H2H matrix is computed analytically (no MC) from current ratings using the Glicko-2 formula above. Tournament EV uses 10,000 bracket samples; the Bo-N to single-match win probability is computed exactly via a binomial expansion.</p>
+
+            <h3 id="m-limits">Known limitations</h3>
+            <ul><li>Glicko-2 assumes constant skill within a rating period; mid-season roster changes (player swaps, IGL changes) introduce skill shifts that Glicko-2 absorbs only with a lag of ~5–8 matches.</li><li>Map pool is not modeled; in CS2 and Valorant a team's effective rating differs by map.</li><li>Patch updates (LoL meta resets, Valorant agent rebalances) create discrete skill resets that are not captured by the continuous-time Glicko model.</li></ul>
+
+            <h3 id="m-refs">References</h3>
+            <ol class="methodology-refs" aria-label="References"><li><cite>Glickman, M. E. (1999). Parameter estimation in large dynamic paired comparison experiments. Applied Statistics 48(3), 377–394.</cite></li><li><cite>Glickman, M. E. (2012). Example of the Glicko-2 system. Technical report, Boston University.</cite></li><li><cite>Aldous, D. (2017). Elo Ratings and the Sports Model: A Neglected Topic in Applied Probability? Statistical Science 32(4).</cite></li><li><cite>Liquipedia and HLTV.org match databases (current).</cite></li></ol>
+          </article>
+        </section>
 
   </main>
 

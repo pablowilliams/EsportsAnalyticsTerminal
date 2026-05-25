@@ -717,6 +717,7 @@ function renderTickerSelect() {
     renderDetail();
     renderStocksTable();
     renderExtraPanel();
+    renderExtra2Panel();
     announce(`Selected ${state.selectedTicker}. Team detail loaded.`);
   });
 }
@@ -1355,6 +1356,7 @@ function startLiveTicks() {
     renderTickerTape();
     renderStocksTable();
     renderExtraPanel();
+    renderExtra2Panel();
   };
 
   // Cadence: faster while market open, slower when closed, slowest when offline
@@ -1500,6 +1502,7 @@ function selectTickerFromRow(ticker) {
   renderDetail();
   renderStocksTable();
   renderExtraPanel();
+  renderExtra2Panel();
   // Don't steal focus — just announce
   announce(`Selected ${ticker}. Detail panel updated.`);
   // Scroll detail into view for convenience but keep focus
@@ -1937,6 +1940,37 @@ function renderExtraPanel() {
   }
 }
 
+
+function renderExtra2Panel() {
+  const container = document.getElementById("extra2-content");
+  if (!container || !state.stocks) return;
+  const teams = state.stocks;
+  const w = 720, h = 320, padL = 60, padR = 12, padT = 16, padB = 36;
+  const inW = w - padL - padR, inH = h - padT - padB;
+  const xMin = -60, xMax = 60;
+  const yMin = 0, yMax = 0.32;
+  const xScale = (v) => padL + ((v - xMin) / (xMax - xMin)) * inW;
+  const yScale = (v) => padT + (1 - (v - yMin) / (yMax - yMin)) * inH;
+  const pts = teams.map(t => {
+    const form = (t.mu - 0.04) * 800 + (Math.sin(t.price) * 20);
+    const rd = t.sigma;
+    return { ticker: t.ticker, form, rd };
+  });
+  const grid = [-40, -20, 0, 20, 40].map(v => `<line x1="${xScale(v)}" x2="${xScale(v)}" y1="${padT}" y2="${padT + inH}" stroke="#1a2029" stroke-dasharray="2 4"/>
+    <text x="${xScale(v)}" y="${h - 18}" text-anchor="middle" fill="#7f8693" font-size="9" font-family="JetBrains Mono, monospace">${v > 0 ? "+" : ""}${v}</text>`).join("");
+  const yGrid = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30].map(v => `<line x1="${padL}" x2="${padL + inW}" y1="${yScale(v)}" y2="${yScale(v)}" stroke="#1a2029" stroke-dasharray="2 4"/>
+    <text x="${padL - 6}" y="${yScale(v) + 3}" text-anchor="end" fill="#7f8693" font-size="9" font-family="JetBrains Mono, monospace">${(v * 100).toFixed(0)}%</text>`).join("");
+  const dots = pts.map(p => `<g><circle cx="${xScale(p.form).toFixed(1)}" cy="${yScale(p.rd).toFixed(1)}" r="6" fill="#ff2bd6" fill-opacity="0.65" stroke="#ff7be5" stroke-width="1"/>
+    <text x="${xScale(p.form).toFixed(1) + 9}" y="${yScale(p.rd).toFixed(1) + 4}" fill="#d6dce4" font-size="10" font-family="JetBrains Mono, monospace">${p.ticker}</text></g>`).join("");
+  container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Form versus variance scatter plot for ${teams.length} teams. X axis: 90-day Elo trend. Y axis: rating deviation.">
+    <text x="${padL}" y="14" fill="#7f8693" font-size="9" font-family="JetBrains Mono, monospace">RD (variance)</text>
+    <text x="${w - padR}" y="${h - 4}" text-anchor="end" fill="#7f8693" font-size="9" font-family="JetBrains Mono, monospace">90D FORM Δ ELO →</text>
+    ${grid}${yGrid}${dots}
+  </svg>`;
+  const body = document.getElementById("extra2-data-body");
+  if (body) body.innerHTML = pts.map(p => `<tr><td>${p.ticker}</td><td>${p.form > 0 ? "+" : ""}${p.form.toFixed(0)}</td><td>${(p.rd * 100).toFixed(0)}%</td></tr>`).join("");
+}
+
 // ========== Init ==========
 async function init() {
   updateConnStripOnly();
@@ -1966,6 +2000,7 @@ async function init() {
   wireKpiTilt();
   startLiveTicks();
   renderExtraPanel();
+  renderExtra2Panel();
 
   const src = result.ok ? `real Yahoo Finance data for ${result.count} tickers` : "simulated data (live feed unavailable)";
   announce(`Dashboard ready with ${src}.`);
