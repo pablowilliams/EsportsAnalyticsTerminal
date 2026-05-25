@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-05-25T00:14:27.227Z",
+  "generatedAt": "2026-05-25T00:38:25.758Z",
   "source": "synthetic",
   "tickers": {
     "T1": {
       "ticker": "T1",
       "price": 1845,
       "prevClose": 1862.4731802765518,
-      "ts": 1779668067227,
+      "ts": 1779669505758,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -106,7 +106,7 @@
       "ticker": "GENG",
       "price": 1810,
       "prevClose": 1781.0784642608844,
-      "ts": 1779668067227,
+      "ts": 1779669505758,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -206,7 +206,7 @@
       "ticker": "G2",
       "price": 1760,
       "prevClose": 1783.6935822487533,
-      "ts": 1779668067227,
+      "ts": 1779669505758,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -306,7 +306,7 @@
       "ticker": "FAZE",
       "price": 1820,
       "prevClose": 1789.8835185140401,
-      "ts": 1779668067227,
+      "ts": 1779669505758,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -406,7 +406,7 @@
       "ticker": "NAVI",
       "price": 1855,
       "prevClose": 1870.8019267945863,
-      "ts": 1779668067227,
+      "ts": 1779669505758,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -506,7 +506,7 @@
       "ticker": "VITA",
       "price": 1790,
       "prevClose": 1800.4072043394767,
-      "ts": 1779668067227,
+      "ts": 1779669505758,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -606,7 +606,7 @@
       "ticker": "LOUD",
       "price": 1745,
       "prevClose": 1784.1323110542576,
-      "ts": 1779668067227,
+      "ts": 1779669505758,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -706,7 +706,7 @@
       "ticker": "SEN",
       "price": 1690,
       "prevClose": 1669.5562916648328,
-      "ts": 1779668067227,
+      "ts": 1779669505758,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -806,7 +806,7 @@
       "ticker": "FNC",
       "price": 1715,
       "prevClose": 1688.6261556985405,
-      "ts": 1779668067227,
+      "ts": 1779669505758,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -906,7 +906,7 @@
       "ticker": "TS",
       "price": 1900,
       "prevClose": 1941.3544137691565,
-      "ts": 1779668067227,
+      "ts": 1779669505758,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
