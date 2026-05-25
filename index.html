@@ -85,7 +85,7 @@
 
       <div class="strategy-bar">
         <fieldset class="strategy-fieldset">
-          <legend>Trading strategies <span class="legend-hint">pick one or more — signals combine</span></legend>
+          <legend>Wagering strategies <span class="legend-hint">pick one or more — signals combine</span></legend>
           <div class="strategy-options" id="strategy-options"></div>
         </fieldset>
       </div>
@@ -366,6 +366,7 @@
           <nav aria-labelledby="methodology-toc-heading" class="methodology-toc">
             <h3 id="methodology-toc-heading">On this page</h3>
             <ol>
+              <li><a href="#m-abstract">Abstract</a></li>
               <li><a href="#m-model">Stochastic model</a></li>
               <li><a href="#m-calib">Calibration</a></li>
               <li><a href="#m-impl">Numerical implementation</a></li>
@@ -379,6 +380,9 @@
           </nav>
 
           <article class="methodology-article">
+            <h3 id="m-abstract">Abstract</h3>
+            <p>This dashboard implements a Glicko-2 rating-system inference layer over competitive esports teams across League of Legends, Counter-Strike 2, Valorant, and Dota 2. The choice of Glicko-2 over classical Elo (<cite>Elo, 1978</cite>) reflects two empirical advantages established in the paired-comparison literature: explicit rating-deviation that models a team's idle uncertainty, and rating-volatility that captures inconsistency (<cite>Glickman, 1999, 2012</cite>). TrueSkill (<cite>Herbrich, Minka &amp; Graepel, 2007</cite>) is comparable for free-for-all multi-player contexts but Glicko-2 dominates head-to-head team match settings on out-of-sample log-loss. Pairwise win probabilities are computed analytically; tournament-bracket Monte Carlo gives placement-distribution EV per team.</p>
+
             <h3 id="m-model">Stochastic model</h3>
             <p>Competitive esports is a paired-comparison setting in which the latent quantity of interest is each team's skill level over time. The classical Elo system is widely used but has two limitations addressed by Glicko-2 (Glickman, 1999, 2012): (i) Elo provides no measure of rating uncertainty, so a team that hasn't played for months is treated identically to one with a fresh result; (ii) Elo assumes a constant rating-period variance, whereas real teams have heterogeneous consistency. Glicko-2 fixes both by tracking <em>rating</em> <code>r</code>, <em>rating deviation</em> <code>RD</code>, and <em>rating volatility</em> <code>σ</code> simultaneously.</p>
       <p>The win-probability between teams A and B with ratings <code>r_A, r_B</code> and combined rating deviation <code>RD_*</code> is:</p>
