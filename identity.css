@@ -1,5 +1,6 @@
 /* Series Forecast: broadcast-style match analysis. */
 :root { --bg:#0d0e12; --bg-elev-1:#15171d; --bg-elev-2:#1b1e26; --bg-elev-3:#242833; --border:#2a2e3a; --border-strong:#42495b; --text:#f3f1ea; --text-muted:#aaa7b2; --text-dim:#777582; --accent:#f4d35e; --accent-dim:#b99b34; --accent-bg:rgba(244,211,94,.1); --danger:#ff5c7a; --focus:#f4d35e; --font-sans:"Space Grotesk",system-ui,sans-serif; --r:12px; }
+html,body { overflow-x:hidden; }
 .term-strip { display:none!important; }
 body::before { background:radial-gradient(circle at 80% 0,rgba(244,211,94,.09),transparent 32%); }
 .app { max-width:1360px; padding:18px 26px 52px; }
