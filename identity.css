@@ -1,0 +1,13 @@
+/* Series Forecast: broadcast-style match analysis. */
+:root { --bg:#0d0e12; --bg-elev-1:#15171d; --bg-elev-2:#1b1e26; --bg-elev-3:#242833; --border:#2a2e3a; --border-strong:#42495b; --text:#f3f1ea; --text-muted:#aaa7b2; --text-dim:#777582; --accent:#f4d35e; --accent-dim:#b99b34; --accent-bg:rgba(244,211,94,.1); --danger:#ff5c7a; --focus:#f4d35e; --font-sans:"Space Grotesk",system-ui,sans-serif; --r:12px; }
+.term-strip { display:none!important; }
+body::before { background:radial-gradient(circle at 80% 0,rgba(244,211,94,.09),transparent 32%); }
+.app { max-width:1360px; padding:18px 26px 52px; }
+.ticker-tape-wrap { margin-inline:-26px; border:0; border-bottom:1px solid var(--border-strong); }
+.app-header { padding-top:20px; border-bottom:0; }
+.app-header h1 { font:800 21px/1 var(--font-sans); letter-spacing:-.02em; text-transform:uppercase; }
+.hero { background:linear-gradient(125deg,#24202d,#12141a 70%); border:1px solid #3d3946; overflow:hidden; }
+.hero-h { font:800 clamp(42px,7vw,84px)/.9 var(--font-sans); letter-spacing:-.06em; text-transform:uppercase; }
+.section,.controls-block { border-radius:var(--r); }
+.section h2,.section h3,.section h4 { font-family:var(--font-sans); letter-spacing:-.02em; text-transform:none; }
+.btn { background:var(--accent); border-color:var(--accent); color:#17130a; }

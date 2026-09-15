@@ -1,39 +1,24 @@
-# EsportsAnalyticsTerminal
+# Series Forecast
 
-Terminal-style Monte Carlo dashboard for esports teams with Elo-driven win probability sims, head-to-head matrices, and roster sentiment.
+A match-analysis workbench for exploring seeded tournament scenarios across a small multi-title team catalogue.
 
-## Features
+## What it demonstrates
 
-- **Monte Carlo simulation** — Geometric Brownian Motion engine, configurable paths (100 / 1k / 10k) and horizons (5 / 30 / 90 / 252 periods).
-- **Team watchlist** — 10 teams (T1, GENG, G2, FAZE, NAVI…).
-- **Live tick simulation** — synthetic ticks every few seconds with deterministic seed for reproducibility.
-- **Strategy signals** — BACK / FADE / PASS derived from Form MA Cross, Variance MR, Streak Momentum, Bracket Skew, Fan Chatter.
-- **EAT chatter panel** — positive / neutral / negative sentiment with sample posts per team.
-- **Team KPIs** — aggregate value, P&L, expected return, 95% VaR, Sharpe, sentiment.
-- **Custom panel** — head-to-head Elo-derived win-probability matrix.
-- **Accessible by default** — WCAG 2.2 AA: keyboard nav, ARIA live regions, screen-reader chart alternatives, 4.5:1 contrast in dark mode.
+- Repeatable match-path simulation using explicit seeds and horizons.
+- Team comparison using rating, recent form and uncertainty.
+- Head-to-head matrices and bracket sensitivity views.
+- Accessible controls, sortable tables and non-visual chart summaries.
 
-## Running
+Teams are recognisable reference labels, but all ratings, fixtures, prices, posts and outcomes are synthetic. Nothing here is live betting data or wagering advice.
 
-No build step. Live at https://pablowilliams.github.io/EsportsAnalyticsTerminal/.
-
-For local development, any static server works:
+## Run locally
 
 ```bash
 python3 -m http.server 8000
-# then visit http://localhost:8000
 ```
 
-## Data pipeline
+Open `http://localhost:8000`. The published version is available through GitHub Pages.
 
-The dashboard reads `data/quotes.json` on load and on each tick. A scheduled GitHub Action (`.github/workflows/refresh-data.yml`) regenerates synthetic close histories every hour so the visible data evolves. Replace the generator with a real data source to go live.
+## Engineering note
 
-## Architecture
-
-- `index.html` — semantic layout, landmarks, headings
-- `app.js` — data, Monte Carlo engine, sentiment, signal logic, rendering
-- `styles.css` — dark terminal theme with AA-contrast tokens
-
-## License
-
-Private. All rights reserved.
+The deterministic scenario kernel is shared with four sibling studies. This application owns the team-rating adapter, match terminology and tournament-specific views.

@@ -1,7 +1,7 @@
 "use strict";
 
 /* =========================================================================
-   SentimentTradingView — Monte Carlo dashboard
+   Domain-specific scenario analysis interface
    =========================================================================
    All data is mocked for the demo. Integration seams:
      - fetchPrices()        -> Polygon / Alpaca / Finnhub REST + WS
@@ -330,10 +330,10 @@ const STRATEGIES = [
     apply: (ctx) => {
       const s20 = sma(ctx.history, 20);
       const s50 = sma(ctx.history, 50);
-      if (s20 == null || s50 == null) return { signal: "PASS", detail: "Not enough history for 50-day MA." };
-      if (s20 > s50 * 1.005) return { signal: "BACK",  detail: `20-day (${s20.toFixed(2)}) above 50-day (${s50.toFixed(2)}) — bullish trend.` };
-      if (s20 < s50 * 0.995) return { signal: "FADE", detail: `20-day (${s20.toFixed(2)}) below 50-day (${s50.toFixed(2)}) — bearish trend.` };
-      return { signal: "PASS", detail: `20-day ≈ 50-day — consolidation.` };
+      if (s20 == null || s50 == null) return { signal: "EVEN", detail: "Not enough history for 50-day MA." };
+      if (s20 > s50 * 1.005) return { signal: "FAVOURED",  detail: `20-day (${s20.toFixed(2)}) above 50-day (${s50.toFixed(2)}) — bullish trend.` };
+      if (s20 < s50 * 0.995) return { signal: "UNDERDOG", detail: `20-day (${s20.toFixed(2)}) below 50-day (${s50.toFixed(2)}) — bearish trend.` };
+      return { signal: "EVEN", detail: `20-day ≈ 50-day — consolidation.` };
     },
   },
   {
@@ -342,9 +342,9 @@ const STRATEGIES = [
     desc: "performance MR",
     apply: (ctx) => {
       const r = rsi(ctx.history, 14);
-      if (r < 30) return { signal: "BACK",  detail: `RSI ${r.toFixed(1)} — oversold, mean-revert up.` };
-      if (r > 70) return { signal: "FADE", detail: `RSI ${r.toFixed(1)} — overbought, mean-revert down.` };
-      return { signal: "PASS", detail: `RSI ${r.toFixed(1)} — mid-range, no edge.` };
+      if (r < 30) return { signal: "FAVOURED",  detail: `RSI ${r.toFixed(1)} — oversold, mean-revert up.` };
+      if (r > 70) return { signal: "UNDERDOG", detail: `RSI ${r.toFixed(1)} — overbought, mean-revert down.` };
+      return { signal: "EVEN", detail: `RSI ${r.toFixed(1)} — mid-range, no edge.` };
     },
   },
   {
@@ -353,11 +353,11 @@ const STRATEGIES = [
     desc: "20-match return",
     apply: (ctx) => {
       const h = ctx.history;
-      if (h.length < 21) return { signal: "PASS", detail: "Not enough data." };
+      if (h.length < 21) return { signal: "EVEN", detail: "Not enough data." };
       const r20 = (h[h.length - 1] - h[h.length - 21]) / h[h.length - 21];
-      if (r20 > 0.05)  return { signal: "BACK",  detail: `+${(r20 * 100).toFixed(1)}% past 20d — ride the trend.` };
-      if (r20 < -0.05) return { signal: "FADE", detail: `${(r20 * 100).toFixed(1)}% past 20d — negative momo.` };
-      return { signal: "PASS", detail: `${(r20 * 100).toFixed(1)}% past 20d — flat.` };
+      if (r20 > 0.05)  return { signal: "FAVOURED",  detail: `+${(r20 * 100).toFixed(1)}% past 20d — ride the trend.` };
+      if (r20 < -0.05) return { signal: "UNDERDOG", detail: `${(r20 * 100).toFixed(1)}% past 20d — negative momo.` };
+      return { signal: "EVEN", detail: `${(r20 * 100).toFixed(1)}% past 20d — flat.` };
     },
   },
   {
@@ -365,14 +365,14 @@ const STRATEGIES = [
     name: "Bracket Skew",
     desc: "deep-run upside",
     apply: (ctx) => {
-      if (!ctx.mcSummary) return { signal: "PASS", detail: "Run a simulation." };
+      if (!ctx.mcSummary) return { signal: "EVEN", detail: "Run a simulation." };
       const { ci95High, ci95Low, expectedReturn, probUp } = ctx.mcSummary;
       const upside = ci95High;
       const downside = -ci95Low;
       const ratio = upside / Math.max(downside, 0.0001);
-      if (ratio > 1.3 && expectedReturn > 0.01) return { signal: "BACK", detail: `Up/down ratio ${ratio.toFixed(2)}x, E[R] ${(expectedReturn * 100).toFixed(1)}%, Pr(up) ${(probUp * 100).toFixed(0)}%.` };
-      if (ratio < 0.8 && expectedReturn < -0.01) return { signal: "FADE", detail: `Up/down ratio ${ratio.toFixed(2)}x, E[R] ${(expectedReturn * 100).toFixed(1)}%, Pr(up) ${(probUp * 100).toFixed(0)}%.` };
-      return { signal: "PASS", detail: `Up/down ratio ${ratio.toFixed(2)}x — no clear edge.` };
+      if (ratio > 1.3 && expectedReturn > 0.01) return { signal: "FAVOURED", detail: `Up/down ratio ${ratio.toFixed(2)}x, E[R] ${(expectedReturn * 100).toFixed(1)}%, Pr(up) ${(probUp * 100).toFixed(0)}%.` };
+      if (ratio < 0.8 && expectedReturn < -0.01) return { signal: "UNDERDOG", detail: `Up/down ratio ${ratio.toFixed(2)}x, E[R] ${(expectedReturn * 100).toFixed(1)}%, Pr(up) ${(probUp * 100).toFixed(0)}%.` };
+      return { signal: "EVEN", detail: `Up/down ratio ${ratio.toFixed(2)}x — no clear edge.` };
     },
   },
   {
@@ -381,21 +381,21 @@ const STRATEGIES = [
     desc: "net sentiment",
     apply: (ctx) => {
       const s = ctx.sentiment;
-      if (s.score > 0.25)  return { signal: "BACK",  detail: `Net +${(s.score * 100).toFixed(0)} — crowd bullish.` };
-      if (s.score < -0.15) return { signal: "FADE", detail: `Net ${(s.score * 100).toFixed(0)} — crowd bearish.` };
-      return { signal: "PASS", detail: `Net ${(s.score * 100).toFixed(0)} — mixed crowd.` };
+      if (s.score > 0.25)  return { signal: "FAVOURED",  detail: `Net +${(s.score * 100).toFixed(0)} — crowd bullish.` };
+      if (s.score < -0.15) return { signal: "UNDERDOG", detail: `Net ${(s.score * 100).toFixed(0)} — crowd bearish.` };
+      return { signal: "EVEN", detail: `Net ${(s.score * 100).toFixed(0)} — mixed crowd.` };
     },
   },
 ];
 
-function signalScore(signal) { return signal === "BACK" ? 1 : signal === "FADE" ? -1 : 0; }
+function signalScore(signal) { return signal === "FAVOURED" ? 1 : signal === "UNDERDOG" ? -1 : 0; }
 
 function combineSignals(results) {
-  if (!results.length) return { signal: "PASS", detail: "Select at least one strategy." };
+  if (!results.length) return { signal: "EVEN", detail: "Select at least one strategy." };
   const avg = results.reduce((a, r) => a + signalScore(r.signal), 0) / results.length;
-  if (avg > 0.35)  return { signal: "BACK",    detail: "Majority bullish." };
-  if (avg < -0.35) return { signal: "FADE",   detail: "Majority bearish." };
-  return { signal: "PASS", detail: "Mixed strategy signals." };
+  if (avg > 0.35)  return { signal: "FAVOURED",    detail: "Majority bullish." };
+  if (avg < -0.35) return { signal: "UNDERDOG",   detail: "Majority bearish." };
+  return { signal: "EVEN", detail: "Mixed strategy signals." };
 }
 
 // ========== State ==========
@@ -416,7 +416,7 @@ const state = {
 };
 
 // =======================================================================
-// ===== REAL-TIME DATA SOURCE (Yahoo Finance via CORS proxy) ============
+// ===== VERSIONED SCENARIO SNAPSHOT ============
 // =======================================================================
 
 const dataSource = {
@@ -568,17 +568,17 @@ function onConnModeChange(newMode, source) {
   if (newMode === "offline") {
     if (banner && !banner.dataset.dismissed) {
       banner.hidden = false;
-      setText("#feed-banner-text", "Live feed unavailable — showing simulated data.");
+      setText("#feed-banner-text", "Scenario snapshot unavailable — using embedded seed data.");
     }
     if (!dataSource.hasAnnouncedFallback && sess) {
-      sess.textContent = "Live data feed unavailable. Dashboard is using simulated prices.";
+      sess.textContent = "Versioned snapshot unavailable. Using embedded synthetic inputs.";
       dataSource.hasAnnouncedFallback = true;
     }
   } else if (newMode === "delayed") {
-    if (sess) sess.textContent = `Live feed delayed. Source: ${source || ""}.`;
+    if (sess) sess.textContent = `Snapshot check delayed. Source: ${source || ""}.`;
   } else if (newMode === "live") {
     if (banner && !banner.dataset.dismissed) banner.hidden = true;
-    if (sess) sess.textContent = `Live feed active. Source: ${source || "YF"}.`;
+    if (sess) sess.textContent = `Scenario snapshot loaded. Source: ${source || "YF"}.`;
   }
 }
 
@@ -601,7 +601,7 @@ function updateMarketStatus() {
 // ========== Enrichment ==========
 function buildStocksRuntime() {
   const stocks = STARRED.map((s) => {
-    // Prefer real Yahoo history + calibrated mu/sigma when available
+    // Prefer versioned snapshot history and calibrated parameters when available
     const realHist = dataSource.realHistories[s.ticker];
     const cal = dataSource.realCalibrations[s.ticker];
     let history, mu, sigma, price, prevClose;
@@ -741,8 +741,8 @@ function dollarFmt(x) {
 }
 
 function signalBadge(signal, opts = {}) {
-  const cls = signal === "BACK" ? "badge-buy" : signal === "FADE" ? "badge-sell" : "badge-unsure";
-  const icon = signal === "BACK" ? "▲" : signal === "FADE" ? "▼" : "◆";
+  const cls = signal === "FAVOURED" ? "badge-buy" : signal === "UNDERDOG" ? "badge-sell" : "badge-unsure";
+  const icon = signal === "FAVOURED" ? "▲" : signal === "UNDERDOG" ? "▼" : "◆";
   const label = `Signal: ${signal}`;
   return `<span class="badge ${cls}" aria-label="${label}${opts.context ? ". " + opts.context : ""}"><span class="icon" aria-hidden="true">${icon}</span>${signal}</span>`;
 }
@@ -757,11 +757,11 @@ let kpisBuilt = false;
 const kpiDefs = () => {
   const k = state.portfolio;
   return [
-    { id: "kpi-value",  label: "Portfolio value", value: k.value,           fmt: (v) => dollarFmt(v), mod: "accent",                              sub: `${state.stocks.length} teams · equal weight` },
-    { id: "kpi-pnl",    label: "Today P&L",       value: k.pnl,             fmt: (v) => dollarFmt(v), mod: k.pnl >= 0 ? "positive" : "negative",  valueMod: k.pnl >= 0 ? "up" : "down", subHtml: deltaLabel(k.pnlPct) },
-    { id: "kpi-er",     label: "Expected return", value: k.expectedReturn,  fmt: (v) => pctFmt(v),    mod: k.expectedReturn >= 0 ? "positive" : "negative", valueMod: k.expectedReturn >= 0 ? "up" : "down", sub: `${state.horizon}-day · MC` },
-    { id: "kpi-var",    label: "95% VaR",         value: k.var95,           fmt: (v) => pctFmt(v),    mod: "negative", valueMod: "down",           sub: "5th percentile" },
-    { id: "kpi-sharpe", label: "Sharpe",          value: k.sharpe,          fmt: (v) => v.toFixed(2), mod: "accent",                              sub: "Ex-ante · rf 4.5%" },
+    { id: "kpi-value",  label: "Field rating", value: k.value,           fmt: (v) => dollarFmt(v), mod: "accent",                              sub: `${state.stocks.length} teams · equal weight` },
+    { id: "kpi-pnl",    label: "Latest form change",       value: k.pnl,             fmt: (v) => dollarFmt(v), mod: k.pnl >= 0 ? "positive" : "negative",  valueMod: k.pnl >= 0 ? "up" : "down", subHtml: deltaLabel(k.pnlPct) },
+    { id: "kpi-er",     label: "Expected rating change", value: k.expectedReturn,  fmt: (v) => pctFmt(v),    mod: k.expectedReturn >= 0 ? "positive" : "negative", valueMod: k.expectedReturn >= 0 ? "up" : "down", sub: `${state.horizon}-day · MC` },
+    { id: "kpi-var",    label: "95% lower bound",         value: k.var95,           fmt: (v) => pctFmt(v),    mod: "negative", valueMod: "down",           sub: "5th percentile" },
+    { id: "kpi-sharpe", label: "Form consistency",          value: k.sharpe,          fmt: (v) => v.toFixed(2), mod: "accent",                              sub: "Normalised dispersion" },
     { id: "kpi-sent",   label: "Crowd score",     value: k.sentimentScore,  fmt: (v) => pctFmt(v, 0), mod: k.sentimentScore >= 0 ? "positive" : "negative", valueMod: k.sentimentScore >= 0 ? "up" : "down", sub: "X net · pos − neg" },
   ];
 };
@@ -794,8 +794,8 @@ function renderKPIs() {
   });
 
   // Right rail
-  const buys = state.stocks.filter((x) => getCombinedSignalForStock(x).signal === "BACK").length;
-  const sells = state.stocks.filter((x) => getCombinedSignalForStock(x).signal === "FADE").length;
+  const buys = state.stocks.filter((x) => getCombinedSignalForStock(x).signal === "FAVOURED").length;
+  const sells = state.stocks.filter((x) => getCombinedSignalForStock(x).signal === "UNDERDOG").length;
   const avgProbUp = state.stocks.reduce((a, x) => a + x.mcSummary.probUp, 0) / state.stocks.length;
   const k = state.portfolio;
 
@@ -814,11 +814,11 @@ function renderKPIs() {
     animateNumber(el, prev, r.value, r.fmt, 520);
     state.prevKpi[r.sel] = r.value;
   });
-  setText("#rail-er-sub", `Portfolio · ${state.horizon}d`);
+  setText("#rail-er-sub", `Team field · ${state.horizon}d`);
   setText("#rail-buys-val", `${buys} / ${sells}`);
   setText("#rail-buys-sub", `${state.stocks.length} teams total`);
 
-  // Terminal strip
+   strip
   setText("#term-horizon", state.horizon + "D");
   setText("#term-paths", state.sims >= 1000 ? (state.sims / 1000) + "K" : String(state.sims));
   setText("#term-seed", String(state.seed));
@@ -884,7 +884,7 @@ function renderStocksTable() {
     const ciLabel = `${pctFmt(s.mcSummary.ci95Low, 1)} / ${pctFmt(s.mcSummary.ci95High, 1)}`;
     const sentDom = s.sentiment.positive > s.sentiment.negative ? "Pos" : s.sentiment.negative > s.sentiment.positive ? "Neg" : "Mix";
     const sentScore = pctFmt(s.sentiment.score, 0);
-    const dotCls = s.combinedSignal.signal === "BACK" ? "buy" : s.combinedSignal.signal === "FADE" ? "sell" : "unsure";
+    const dotCls = s.combinedSignal.signal === "FAVOURED" ? "buy" : s.combinedSignal.signal === "UNDERDOG" ? "sell" : "unsure";
     const conviction = convictionFromStock(s);
     const convAnim = convictionChanges[s.ticker] ? " animate" : "";
     const spark = sparklineSvg(s.history, s.change >= 0);
@@ -1045,7 +1045,7 @@ function renderChart(mc, stock, onComplete) {
   for (let i = 0; i <= 4; i++) gridVals.push(yMin + (yMax - yMin) * (i / 4));
 
   const s = mc.summary;
-  const captionText = `${mc.nPaths.toLocaleString()} Monte Carlo paths over ${mc.days} trading days. Expected return ${pctFmt(s.expectedReturn)}, median ${pctFmt(s.medianReturn)}, 95% CI ${pctFmt(s.ci95Low)} to ${pctFmt(s.ci95High)}, probability of gain ${(s.probUp * 100).toFixed(0)}%.`;
+  const captionText = `${mc.nPaths.toLocaleString()} Monte Carlo paths over ${mc.days} match steps. Expected rating change ${pctFmt(s.expectedReturn)}, median ${pctFmt(s.medianReturn)}, 95% CI ${pctFmt(s.ci95Low)} to ${pctFmt(s.ci95High)}, probability of gain ${(s.probUp * 100).toFixed(0)}%.`;
   const chartAriaLabel = `${stock.ticker} Monte Carlo chart. ${captionText}`;
 
   // Build frame SVG with placeholders that will be animated in
@@ -1084,7 +1084,7 @@ function renderChart(mc, stock, onComplete) {
     ["Start price", priceFmt(mc.S0)],
     ["Paths simulated", mc.nPaths.toLocaleString()],
     ["Horizon (days)", mc.days],
-    ["Expected return", pctFmt(s.expectedReturn)],
+    ["Expected rating change", pctFmt(s.expectedReturn)],
     ["Median return", pctFmt(s.medianReturn)],
     ["5th percentile", pctFmt(s.ci95Low)],
     ["95th percentile", pctFmt(s.ci95High)],
@@ -1256,10 +1256,10 @@ function renderSummary() {
 
   // Aggregate signal for the whole watchlist
   const all = state.stocks.map((s) => getCombinedSignalForStock(s).signal);
-  const buy = all.filter((x) => x === "BACK").length;
-  const sell = all.filter((x) => x === "FADE").length;
-  const uns = all.filter((x) => x === "PASS").length;
-  const winner = buy > sell && buy > uns ? "BACK" : sell > buy && sell > uns ? "FADE" : "PASS";
+  const buy = all.filter((x) => x === "FAVOURED").length;
+  const sell = all.filter((x) => x === "UNDERDOG").length;
+  const uns = all.filter((x) => x === "EVEN").length;
+  const winner = buy > sell && buy > uns ? "FAVOURED" : sell > buy && sell > uns ? "UNDERDOG" : "EVEN";
   const agg = `${buy} BACK · ${uns} PASS · ${sell} FADE across ${all.length} teams.`;
   $("#aggregate-signal").innerHTML = signalBadge(winner, { context: agg });
   $("#summary-signal").innerHTML = signalBadge(winner, { context: agg });
@@ -1398,7 +1398,7 @@ function wireEvents() {
         const er = state.mcResult && state.mcResult.summary
           ? pctFmt(state.mcResult.summary.expectedReturn)
           : "—";
-        announce(`Simulation complete for ${state.selectedTicker}. Expected return ${er}.`);
+        announce(`Simulation complete for ${state.selectedTicker}. Expected rating change ${er}.`);
       });
     }, 30);
   });
@@ -1422,7 +1422,7 @@ function wireEvents() {
     }
     state.portfolio = computePortfolioKpis(state.stocks);
     renderAll();
-    announce(`Horizon set to ${state.horizon} trading days.`);
+    announce(`Horizon set to ${state.horizon} match steps.`);
   });
 
   // Seed
@@ -1481,7 +1481,7 @@ function wireEvents() {
       renderAll();
       banner.hidden = true;
     } else {
-      setText("#feed-banner-text", "Live feed still unavailable. Continuing with simulation.");
+      setText("#feed-banner-text", "Snapshot still unavailable. Continuing with embedded inputs.");
     }
   });
 
@@ -1671,19 +1671,19 @@ function spawnParticles(origin, kind) {
   if (prefersReducedMotion()) return;
   const layer = $("#fx-layer");
   if (!layer) return;
-  const count = kind === "BACK" ? 18 : 14;
+  const count = kind === "FAVOURED" ? 18 : 14;
   for (let i = 0; i < count; i++) {
     const p = document.createElement("div");
-    p.className = "fx-particle" + (kind === "FADE" ? " sell" : "");
+    p.className = "fx-particle" + (kind === "UNDERDOG" ? " sell" : "");
     p.style.left = origin.x + "px";
     p.style.top = origin.y + "px";
     layer.appendChild(p);
-    const angle = kind === "BACK"
+    const angle = kind === "FAVOURED"
       ? (Math.random() * Math.PI * 2)
       : (Math.PI / 2 + (Math.random() - 0.5) * 0.7);
-    const speed = kind === "BACK" ? 40 + Math.random() * 80 : 20 + Math.random() * 40;
+    const speed = kind === "FAVOURED" ? 40 + Math.random() * 80 : 20 + Math.random() * 40;
     const dx = Math.cos(angle) * speed;
-    const dy = Math.sin(angle) * speed + (kind === "FADE" ? 70 + Math.random() * 40 : 0);
+    const dy = Math.sin(angle) * speed + (kind === "UNDERDOG" ? 70 + Math.random() * 40 : 0);
     const dur = 620 + Math.random() * 380;
     const rot = (Math.random() - 0.5) * 200;
     p.animate(
@@ -1696,7 +1696,7 @@ function spawnParticles(origin, kind) {
   }
 }
 function particlesForSignalFlip(row, signal) {
-  if (signal !== "BACK" && signal !== "FADE") return;
+  if (signal !== "FAVOURED" && signal !== "UNDERDOG") return;
   const badge = row.querySelector(".badge");
   if (!badge) return;
   const r = badge.getBoundingClientRect();
@@ -1719,7 +1719,7 @@ function setGauge(arcEl, needleEl, ratio, statusLabelEl, value, fmt, thresholds)
 }
 function renderGauges() {
   const k = state.portfolio;
-  // Sharpe: map [-1, 3] -> [0, 1]
+  // Form consistency: map [-1, 3] -> [0, 1]
   const sharpeRatio = Math.max(0, Math.min(1, (k.sharpe + 1) / 4));
   const sharpeStatus =
     k.sharpe >= 1.5 ? "excellent" :
@@ -1727,7 +1727,7 @@ function renderGauges() {
     k.sharpe >= 0.3 ? "moderate" :
     k.sharpe >= 0   ? "weak" : "negative";
   setGauge($("#gauge-sharpe-arc"), $("#gauge-sharpe-needle"), sharpeRatio);
-  $("#gauge-sharpe").setAttribute("aria-label", `Sharpe ${k.sharpe.toFixed(2)}, ${sharpeStatus} (target > 1.0)`);
+  $("#gauge-sharpe").setAttribute("aria-label", `Form consistency ${k.sharpe.toFixed(2)}, ${sharpeStatus} (target > 1.0)`);
   setText("#rail-sharpe-sub", `Ex-ante · ${sharpeStatus}`);
 
   // VaR: more negative = worse. map [-0.30, 0] -> [1, 0] (more red = fuller arc)
@@ -1739,76 +1739,6 @@ function renderGauges() {
   setGauge($("#gauge-var-arc"), $("#gauge-var-needle"), varRatio);
   $("#gauge-var").setAttribute("aria-label", `Value at Risk 95 percent, ${pctFmt(k.var95)}, ${varStatus}`);
   setText("#rail-var-sub", `5th pct · ${varStatus}`);
-}
-
-// --- Boot sequence (feature 8) ---------------------------------------
-function runBootSequence(onComplete) {
-  const overlay = $("#boot-overlay");
-  if (!overlay) { onComplete(); return; }
-  const alreadySeen = sessionStorage.getItem("eat.booted") === "1";
-  if (alreadySeen || prefersReducedMotion()) {
-    overlay.hidden = true;
-    onComplete();
-    return;
-  }
-  overlay.hidden = false;
-  const log = $("#boot-log");
-  const skipBtn = $("#boot-skip");
-  let cancelled = false;
-  let timers = [];
-
-  const finish = () => {
-    if (cancelled) return;
-    cancelled = true;
-    timers.forEach(clearTimeout);
-    sessionStorage.setItem("eat.booted", "1");
-    overlay.classList.add("fadeout");
-    setTimeout(() => { overlay.hidden = true; onComplete(); }, 440);
-  };
-
-  skipBtn.addEventListener("click", finish, { once: true });
-  const escHandler = (e) => { if (e.key === "Escape") { finish(); document.removeEventListener("keydown", escHandler); } };
-  document.addEventListener("keydown", escHandler);
-  skipBtn.focus();
-
-  const lines = [
-    "> EAT-TERMINAL v4.7  (c) esportsanalyticsterminal",
-    "> booting kernel ........................ <span class='ok'>OK</span>",
-    "> mounting team watchlist ............ <span class='ok'>OK</span>",
-    `> loading ${STARRED.length} teams .................... <span class='ok'>OK</span>`,
-    "> initializing monte carlo engine (GBM) .. <span class='ok'>OK</span>",
-    "> hooking EAT sentiment stream ........ <span class='ok'>OK</span>",
-    "> warming strategy voters ................ <span class='ok'>OK</span>",
-    "> session ready. <span class='cursor'></span>",
-  ];
-  let out = "";
-  const typeLine = (i) => {
-    if (cancelled) return;
-    if (i >= lines.length) { timers.push(setTimeout(finish, 420)); return; }
-    const line = lines[i];
-    let j = 0;
-    const step = () => {
-      if (cancelled) return;
-      // fast type, respecting tag boundaries
-      const next = line.indexOf("<", j);
-      if (next === -1) {
-        out += line.slice(j);
-        j = line.length;
-      } else if (next > j) {
-        out += line[j];
-        j++;
-      } else {
-        const close = line.indexOf(">", j);
-        out += line.slice(j, close + 1);
-        j = close + 1;
-      }
-      log.innerHTML = out;
-      if (j < line.length) timers.push(setTimeout(step, 12));
-      else { out += "\n"; log.innerHTML = out; timers.push(setTimeout(() => typeLine(i + 1), 90)); }
-    };
-    step();
-  };
-  typeLine(0);
 }
 
 // --- Chart crosshair (feature 10) ------------------------------------
@@ -2083,13 +2013,10 @@ async function init() {
   updateConnStripOnly();
   updateMarketStatus();
 
-  // Try real Yahoo Finance bootstrap in background; stocks are built either way
+  // Load the versioned synthetic scenario snapshot before rendering
   const bootstrapPromise = dataSource.bootstrap(STARRED.map((s) => s.ticker)).catch(() => ({ ok: false }));
 
-  // Kick off boot sequence in parallel so UI feels responsive
-  runBootSequence(() => {
-    announce("Dashboard ready.");
-  });
+  announce("Dashboard ready.");
 
   const result = await bootstrapPromise;
 
@@ -2111,7 +2038,7 @@ async function init() {
   renderExtra3Panel();
   renderExtra4Panel();
 
-  const src = result.ok ? `real Yahoo Finance data for ${result.count} tickers` : "simulated data (live feed unavailable)";
+  const src = result.ok ? `versioned synthetic snapshot for ${result.count} tickers` : "embedded seed data (snapshot unavailable)";
   announce(`Dashboard ready with ${src}.`);
 }
 
